@@ -1,0 +1,76 @@
+﻿@page "/employeeList"
+@using System.Text.Json;
+@using BlazorCRUDApp.Model;
+
+@inject HttpClient _httpClient
+@inject IConfiguration Configuration
+
+<h1>Employee Details</h1>
+<div>
+    <a href="/addEmployee">Create New Employee</a>
+</div>
+
+<table class="table table-responsive table-stripped">
+
+    <thead>
+        <tr>
+            <th>Employee Name</th>
+            <th>Employee Code</th>
+            <th>Designation</th>
+            <th>Address</th>
+            <th>Salary Grade</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (employeeList != null && employeeList.Any())
+        {
+            @foreach (var employee in employeeList)
+            {
+                <tr>
+                    <td>@employee.EmpName</td>
+                    <td>@employee.EmpCode</td>
+                    <td>@employee.Designation</td>
+                    <td>@employee.Address</td>
+                    <td>@employee.Salary_Grade</td>
+                    <td>
+                        <a href="/editEmployee/@employee.Id">Edit</a> |
+                        <a href="/deleteEmployee/@employee.Id">Delete</a>
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="5">No employees found.</td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@code {
+    List<EmployeeModel> employeeList = new List<EmployeeModel>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetEmployees();
+    }
+
+    private async Task GetEmployees()
+    {
+        try
+        {
+            var apiSettings = Configuration.GetSection("ApiSettings").Get<ApiSettings>();
+            var apiUrl = apiSettings.BaseURL + "/api/Employee/GetAllEmpInformation";
+
+            var response = await _httpClient.GetFromJsonAsync<StandardApiResponseVM>(apiUrl);
+
+            employeeList = JsonSerializer.Deserialize<List<EmployeeModel>>(response.Data.ToString());
+        }
+        catch (Exception ex)
+        {
+            // Handle exceptions, e.g., log or display an error message
+        }
+    }
+}
