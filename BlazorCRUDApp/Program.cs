@@ -1,4 +1,5 @@
 using BlazorCRUDApp.Data;
+using Blazored.Toast;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 
@@ -9,6 +10,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddHttpClient();
+//builder.Services.AddBlazoredToast();
 
 var app = builder.Build();
 

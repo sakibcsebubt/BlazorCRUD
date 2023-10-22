@@ -1,0 +1,127 @@
+﻿@page "/editEmployee/{Id}"
+@using System.Net.Http;
+@using System.Text.Json;
+@using BlazorCRUDApp.Model;
+@using Blazored.Toast
+@using Blazored.Toast.Services
+
+@inject HttpClient _httpClient
+@inject IConfiguration Configuration
+@inject IJSRuntime JsRuntime
+@inject NavigationManager NavigationManager 
+
+@if (IsEdit)
+{
+    <h1> Edit Employee</h1>
+}
+else
+{
+    <h1> Add Employee</h1>
+}
+ 
+
+
+@if (employee != null)
+{
+    <form>
+        <div class="form-group">
+            <label for="EmpName">Employee Name:</label>
+            <input type="text" class="form-control" id="EmpName" @bind="employee.EmpName" />
+        </div>
+        <div class="form-group">
+            <label for="EmpCode">Employee Code:</label>
+            <input type="text" class="form-control" id="EmpCode" @bind="employee.EmpCode" />
+        </div>
+        <div class="form-group">
+            <label for="Designation">Designation:</label>
+            <input type="text" class="form-control" id="Designation" @bind="employee.Designation" />
+        </div>
+        <div class="form-group">
+            <label for="Address">Address:</label>
+            <input type="text" class="form-control" id="Address" @bind="employee.Address" />
+        </div>
+        <div class="form-group">
+            <label for="Salary_Grade">Salary Grade:</label>
+            <input type="text" class="form-control" id="Salary_Grade" @bind="employee.Salary_Grade" />
+        </div>
+        <div class="mt-5 float-right">
+            <input type="button" class="btn btn-primary" @onclick="@Save" value="Save" />
+            <input type="button" class="btn btn-warning ml-2" @onclick="@BackTOList" value="Back To List" />
+        </div>
+
+    </form>
+}
+else
+{
+    <p>Employee not found.</p>
+}
+
+@code {
+
+    [Parameter]
+    public string Id { get; set; }
+    EmployeeModel employee = new();
+    public bool IsEdit { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var apiSettings = Configuration.GetSection("ApiSettings").Get<ApiSettings>();
+        var apiUrl = apiSettings.BaseURL + "/api/Employee/" + Id;
+        if (Id == "0")
+        {
+            EmployeeModel employee = new()
+                {
+                    Id = 0
+                };
+        }
+        else
+        {
+            IsEdit = true;
+            var response = await _httpClient.GetFromJsonAsync<StandardApiResponseVM>(apiUrl);
+            // EmployeeModel[] employee1 = JsonSerializer.Deserialize<EmployeeModel[]>(response.Data.ToString());
+            var employeeList = JsonSerializer.Deserialize<List<EmployeeModel>>(response.Data.ToString());
+            foreach (var item in employeeList)
+            {
+                employee.Id = item.Id;
+                employee.EmpName = item.EmpName;
+                employee.EmpCode = item.EmpCode;
+                employee.Designation = item.Designation;
+                employee.Address = item.Address;
+                employee.Salary_Grade = item.Salary_Grade;
+            }
+        }
+
+    }
+
+    void BackTOList()
+    {
+        NavigationManager.NavigateTo("EmployeeList");
+    }
+
+    protected async Task Save()
+    {
+        var apiSettings = Configuration.GetSection("ApiSettings").Get<ApiSettings>();
+        var apiUrl = apiSettings.BaseURL + "/api/Employee";
+        HttpResponseMessage response = null;
+        if (employee.Id == 0)
+        {
+            response = await _httpClient.PostAsJsonAsync(apiUrl, @employee);
+        }
+        else
+        {
+            response = await _httpClient.PutAsJsonAsync(apiUrl, @employee);
+
+        }
+        if (response.IsSuccessStatusCode)
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Employee Added/Update Successful!");
+            NavigationManager.NavigateTo("EmployeeList");
+        }
+        else
+        {
+            await JsRuntime.InvokeVoidAsync("alert", "Your Operation Does not Perform!");
+            NavigationManager.NavigateTo("EmployeeList");
+        }
+    }
+} 

@@ -4,11 +4,18 @@
 
 @inject HttpClient _httpClient
 @inject IConfiguration Configuration
+@inject NavigationManager NavigationManager
 
-<h1>Employee Details</h1>
-<div>
-    <a href="/addEmployee">Create New Employee</a>
+ 
+<div class="row mb-4">
+    <div class="col-md-6">
+        <h3 class="">Employee Details</h3>
+    </div>
+    <div class="col-md-6 d-flex justify-content-end">
+        <a href="/editEmployee/0" class="btn btn-primary align-center">Create New Employee</a>
+    </div>
 </div>
+
 
 <table class="table table-responsive table-stripped">
 
@@ -34,8 +41,8 @@
                     <td>@employee.Address</td>
                     <td>@employee.Salary_Grade</td>
                     <td>
-                        <a href="/editEmployee/@employee.Id">Edit</a> |
-                        <a href="/deleteEmployee/@employee.Id">Delete</a>
+                        <a href="/editEmployee/@employee.Id" class="btn btn-primary">Edit</a> |
+                        <input type="button" class="btn btn-danger" @onclick="() => Delete(employee.Id)" value="Delete" />
                     </td>
                 </tr>
             }
@@ -71,6 +78,17 @@
         catch (Exception ex)
         {
             // Handle exceptions, e.g., log or display an error message
+        }
+    }
+
+    protected async Task Delete(long Id)
+    {
+        var apiSettings = Configuration.GetSection("ApiSettings").Get<ApiSettings>();
+        var apiUrl = apiSettings.BaseURL + "/api/Employee/" + Id;
+        var response = await _httpClient.DeleteAsync(apiUrl);
+        if (response.IsSuccessStatusCode)
+        {
+            NavigationManager.NavigateTo("employeeList", forceLoad: true);
         }
     }
 }
